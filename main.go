@@ -2,64 +2,103 @@ package main
 
 import (
 	"fmt"
-	"image/color"
+	// "image/color"
 	"speedread/internal"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/canvas"
+	// "fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	// "fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
-func RenderWords(words []internal.Word, content *widget.Label) {
-	for _, w := range words {
-		time.Sleep(time.Second)
-		content.Text = w.Text
-		content.TextStyle.Bold = !content.TextStyle.Bold
-		content.Refresh()
-	}
+type SpeedRead struct {
+	Top    *fyne.Container
+	Center *fyne.Container
+	Bottom *fyne.Container
+
+	labels map[string]*widget.Label
 }
 
-func BuildBottonBar(displayText *widget.Label) *fyne.Container {
-	playButton := widget.NewButton("Play", func() {
-		words := internal.GetClipBoard()
-		RenderWords(words, displayText)
-	})
-	playButton.Icon = theme.MediaPlayIcon()
+func NewSpeedRead() *SpeedRead {
+	app := &SpeedRead{
+		labels: make(map[string]*widget.Label),
+	}
+	app.Top = app.BuildTopBar()
+	app.Center = app.BuildCenterBox()
+	app.Bottom = app.BuildBottomBar()
 
-	fowardButton := widget.NewButton("", func() {
-		fmt.Println("foward")
-	})
-	fowardButton.Icon = theme.MediaFastForwardIcon()
+	return app
+}
 
-	rewindButton := widget.NewButton("", func() {
+func (s *SpeedRead) newLabel(name string) *widget.Label {
+	w := widget.NewLabel("")
+	s.labels[name] = w
+	return w
+}
+
+func (s *SpeedRead) Play() {
+	// TODO: update other bars
+	// TODO: handle errors from step
+	// TODO: pass arguments to NewDisplayText (WPM etc)
+	go func() {
+		text := internal.NewDisplayText(300)
+		for {
+			w := text.Step("nothing")
+			fmt.Println(w)
+			if w == "" {
+				break
+			}
+			s.labels["W_CURRENT"].SetText(w)
+			// s.labels["W_CURRENT"].Refresh()
+		}
+	}()
+
+}
+
+func (s *SpeedRead) BuildTopBar() *fyne.Container {
+	wpm := s.newLabel("WPM")
+	pct := s.newLabel("PCT")
+	return container.NewGridWithColumns(2, wpm, pct)
+}
+
+func (s *SpeedRead) BuildBottomBar() *fyne.Container {
+	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), func() {
+		s.Play()
+	})
+	fowardButton := widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), func() {
+		fmt.Println("Foward")
+	})
+	rewindButton := widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), func() {
 		fmt.Println("Rewind")
 	})
-	rewindButton.Icon = theme.MediaFastRewindIcon()
 
 	return container.NewGridWithColumns(3, rewindButton, playButton, fowardButton)
 }
 
-// Clipboard content: In Fyne a Canvas is the area within which an
+func (s *SpeedRead) BuildCenterBox() *fyne.Container {
+	centerLabel := s.newLabel("W_CURRENT")
+	left := s.newLabel("W_PREVIOUS")
+	right := s.newLabel("W_NEXT")
+
+	centerLabel.Alignment = fyne.TextAlignCenter
+	centerLabel.TextStyle = fyne.TextStyle{Bold: true}
+	// Use 'NewCenter' to place the label in the center of the window.
+	centerContainer := container.NewCenter(container.NewStack(centerLabel))
+
+	return container.NewGridWithColumns(3, left, centerContainer, right)
+}
+
 func main() {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("SpeedRead")
 
-	top := canvas.NewText("top bar", color.White)
+	app := NewSpeedRead()
+	content := container.NewBorder(app.Top, app.Bottom, nil, nil, app.Center)
 
-	label := widget.NewLabel("")
-	label.Alignment = fyne.TextAlignCenter
-	label.TextStyle = fyne.TextStyle{Bold: true}
-
-	bottonBar := BuildBottonBar(label)
-
-	content := container.NewBorder(top, bottonBar, nil, nil, label)
 	myWindow.SetContent(content)
-
-	myWindow.Resize(fyne.NewSize(300, 100))
+	myWindow.Resize(fyne.NewSize(600, 200))
 	myWindow.ShowAndRun()
-
 }
