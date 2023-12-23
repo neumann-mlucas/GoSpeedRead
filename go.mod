@@ -1,4 +1,4 @@
-module speedread
+module github.com/neumann-mlucas/GoSpeedRead
 
 go 1.21.3
 
