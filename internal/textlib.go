@@ -17,45 +17,50 @@ type DisplayText struct {
 	Words []Word
 	Index int
 	WPM   int
-
-	inp chan string
-	out chan string
 }
 
-func NewDisplayText(wpm int) DisplayText {
+type Word struct {
+	Text    string
+	Weight  int
+	inQuote bool
+}
+
+func NewDisplayText(wpm int) *DisplayText {
 	rawText := GetClipBoard()
 	text := ProcessClipBoardText(rawText)
 
 	text = append(text, Word{})
 
-	inpChannel := make(chan string)
-	outChannel := make(chan string)
+	// inpChannel := make(chan string)
+	// outChannel := make(chan string)
 
-	return DisplayText{
+	return &DisplayText{
 		Words: text,
 		Index: 0,
 		WPM:   wpm,
-		inp:   inpChannel,
-		out:   outChannel,
+		// inp:   inpChannel,
+		// out:   outChannel,
 	}
 }
 
-func (t *DisplayText) Step(cmd string) string {
-	word := t.Words[t.Index].Text
+func (t *DisplayText) GetClipBoard() {
+	content, err := clipboard.ReadAll()
+	if err != nil {
+		fmt.Println("Error reading clipboard:", err)
+		content = ""
+	}
+
+	words := ProcessClipBoardText(content)
+	words = append(words, Word{})
+	t.Words = words
+}
+
+func (t *DisplayText) Step(cmd string) Word {
+	word := t.Words[t.Index]
 	t.HandleCmd(cmd)
 	time.Sleep(t.DisplayTime())
 	t.IncIndex(+1)
 	return word
-}
-
-func (t *DisplayText) Run() {
-	select {
-	case cmd := <-t.inp:
-		t.HandleCmd(cmd)
-	case <-time.After(t.DisplayTime()):
-		t.out <- t.Words[t.Index].Text
-		t.IncIndex(+1)
-	}
 }
 
 func (t *DisplayText) DisplayTime() time.Duration {
@@ -73,6 +78,14 @@ func (t *DisplayText) IncIndex(inc int) {
 	}
 }
 
+func (t *DisplayText) End() bool {
+	return t.Index >= len(t.Words)
+}
+
+func (t *DisplayText) Percentage() int {
+	return 100 * t.Index / len(t.Words)
+}
+
 func (t *DisplayText) HandleCmd(cmd string) {
 	switch cmd {
 	case "inc":
@@ -82,12 +95,6 @@ func (t *DisplayText) HandleCmd(cmd string) {
 	case "restart":
 		t.Index = 0
 	}
-}
-
-type Word struct {
-	Text    string
-	Weight  int
-	inQuote bool
 }
 
 // ProcessClipBoardText splits a string into words and calculates their weights
@@ -140,8 +147,8 @@ func EndsWithAny(s string, chars string) bool {
 func CalcWeight(s string) int {
 	// the mean length of an English word is 5.1 characters
 	weight := 1000 * float64(len(s)) / 5.10
-	if weight < 750 {
-		weight = 750
+	if weight < 800 {
+		weight = 800
 	}
 	if strings.ContainsFunc(s, unicode.IsPunct) {
 		weight += 500
