@@ -1,8 +1,10 @@
 package main
 
 import (
-	"internal/displaytext"
+	// "fmt"
 	"time"
+
+	"internal/displaytext"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -69,7 +71,7 @@ func (s *SpeedRead) BuildTopBar() *fyne.Container {
 
 func (s *SpeedRead) BuildBottomBar() *fyne.Container {
 	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), func() {
-		s.Play()
+		go s.Play()
 	})
 	fowardButton := widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), func() {
 		s.text.IncIndex(+5)
@@ -99,16 +101,13 @@ func (s *SpeedRead) BuildCenterBox() *fyne.Container {
 }
 
 func (s *SpeedRead) Play() {
-	// TODO: update other widgets
-	// TODO: handle errors
-	// TODO: pass arguments to NewDisplayText (WPM etc)
-	// TODO: display last words
-	go func() {
-		s.text.GetClipBoard()
-		for w, t := s.text.Step(); !s.text.IsLastWord(); {
-			s.labels["W_CURRENT"].Text = w
-			s.labels["W_CURRENT"].Refresh()
-			time.Sleep(t)
-		}
-	}()
+	s.text.GetClipBoard()
+	for !s.text.IsLastWord() {
+		w, t := s.text.Step()
+		s.labels["W_CURRENT"].Text = w
+		s.labels["W_CURRENT"].Refresh()
+		time.Sleep(t)
+	}
+	for !s.text.IsLastWord() {
+	}
 }
