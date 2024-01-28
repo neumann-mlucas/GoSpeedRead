@@ -1,18 +1,17 @@
 package main
 
 import (
-	"fmt"
-	// "image/color"
-	"github.com/neumann-mlucas/GoSpeedRead/internal"
+	"internal/displaytext"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	// "fyne.io/fyne/v2/layout"
-	// "fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	// "fyne.io/fyne/v2/layout"
+	// "fyne.io/fyne/v2/data/binding"
 )
 
 const WPM = 300
@@ -24,7 +23,7 @@ type SpeedRead struct {
 	Window *fyne.Container
 
 	labels map[string]*canvas.Text
-	text   *internal.DisplayText
+	text   *displaytext.DisplayText
 }
 
 func main() {
@@ -42,7 +41,7 @@ func main() {
 func NewSpeedRead() *SpeedRead {
 	app := &SpeedRead{
 		labels: make(map[string]*canvas.Text),
-		text:   internal.NewDisplayText(WPM),
+		text:   displaytext.New(WPM),
 	}
 
 	app.Top = app.BuildTopBar()
@@ -83,15 +82,14 @@ func (s *SpeedRead) BuildBottomBar() *fyne.Container {
 }
 
 func (s *SpeedRead) BuildCenterBox() *fyne.Container {
-	centerLabel := s.newCanvas("W_CURRENT", "PLAY")
-	leftLabel := s.newCanvas("W_PREVIOUS", "")
-	rightLabel := s.newCanvas("W_NEXT", "")
+	centerLabel := s.newLabel("W_CURRENT", "PLAY")
+	leftLabel := s.newLabel("W_PREVIOUS", "")
+	rightLabel := s.newLabel("W_NEXT", "")
 
 	centerLabel.Alignment = fyne.TextAlignCenter
 	centerLabel.TextStyle = fyne.TextStyle{Bold: true}
 	centerLabel.TextSize = 32
 
-	// Use 'NewCenter' to place the label in the center of the window.
 	centerContainer := container.NewCenter(container.NewStack(centerLabel))
 
 	rightLabel.Alignment = fyne.TextAlignLeading
@@ -101,22 +99,16 @@ func (s *SpeedRead) BuildCenterBox() *fyne.Container {
 }
 
 func (s *SpeedRead) Play() {
-	// TODO: update other bars
-	// TODO: handle errors from step
+	// TODO: update other widgets
+	// TODO: handle errors
 	// TODO: pass arguments to NewDisplayText (WPM etc)
+	// TODO: display last words
 	go func() {
 		s.text.GetClipBoard()
-		for !s.text.End() {
-			w := s.text.Step("nothing")
-			fmt.Println(w, w.Weight)
-			if w.Text == "" {
-				break
-			}
-			s.canvas["W_CURRENT"].Text = w.Text
-			s.canvas["W_CURRENT"].Refresh()
-			s.labels["PCT"].SetText(fmt.Sprintf("PCT: %3d %%", s.text.Percentage()))
-			s.labels["WPM"].SetText(fmt.Sprintf("WPM: %d", s.text.WPM))
+		for w, t := s.text.Step(); !s.text.IsLastWord(); {
+			s.labels["W_CURRENT"].Text = w
+			s.labels["W_CURRENT"].Refresh()
+			time.Sleep(t)
 		}
 	}()
-
 }

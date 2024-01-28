@@ -7,6 +7,14 @@ require (
 	github.com/atotto/clipboard v0.1.4
 )
 
+require internal/words v1.0.0
+
+replace internal/words => ./internal/words
+
+require internal/displaytext v1.0.0
+
+replace internal/displaytext => ./internal/displaytext
+
 require (
 	fyne.io/systray v1.10.1-0.20230722100817-88df1e0ffa9a // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
