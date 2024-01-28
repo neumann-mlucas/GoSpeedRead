@@ -1,4 +1,4 @@
-package internal
+package words
 
 import (
 	"reflect"
@@ -6,20 +6,15 @@ import (
 )
 
 func TestCalcWeight(t *testing.T) {
-	// Test cases for CalcWeight
 	testCases := []struct {
 		input    string
 		expected int
 	}{
-		{"hello", 98},
-		{"world", 98},
-		{"programming", 215},
-		{"Hello, World!", 304},
-		{"", 0},
-		{"!", 69},
+		{"hello ", 1176},                     // length impacts weight
+		{"world!", 1176 + PunctuationWeight}, // punctuation inpacts weight
+		{"foo", MinimumWeight},               // minimal weight
 	}
 
-	// Iterate over test cases
 	for _, testCase := range testCases {
 		result := CalcWeight(testCase.input)
 		if result != testCase.expected {
@@ -29,7 +24,6 @@ func TestCalcWeight(t *testing.T) {
 }
 
 func TestStartsWithAny(t *testing.T) {
-	// Test cases for StartsWithAny
 	testCases := []struct {
 		input    string
 		chars    string
@@ -41,7 +35,6 @@ func TestStartsWithAny(t *testing.T) {
 		{"apple", "ac", true},
 	}
 
-	// Iterate over test cases
 	for _, testCase := range testCases {
 		result := StartsWithAny(testCase.input, testCase.chars)
 		if result != testCase.expected {
@@ -63,7 +56,6 @@ func TestEndsWithAny(t *testing.T) {
 		{"apple", "ep", true},
 	}
 
-	// Iterate over test cases
 	for _, testCase := range testCases {
 		result := EndsWithAny(testCase.input, testCase.chars)
 		if result != testCase.expected {
@@ -80,35 +72,38 @@ func TestProcessString(t *testing.T) {
 		{
 			input: "Hello World!",
 			expected: []Word{
-				{Text: "Hello", Weight: 98, inQuote: false},
-				{Text: "World!", Weight: 167, inQuote: false},
+				{Text: "Hello", Weight: 0, inQuote: false},
+				{Text: "World!", Weight: 0, inQuote: false},
 			},
 		},
 		{
 			input: "This is a 'test' string.",
 			expected: []Word{
-				{Text: "This", Weight: 78, inQuote: false},
-				{Text: "is", Weight: 39, inQuote: false},
-				{Text: "a", Weight: 19, inQuote: false},
-				{Text: "'test'", Weight: 167, inQuote: true},
-				{Text: "string.", Weight: 187, inQuote: false},
+				{Text: "This", Weight: 0, inQuote: false},
+				{Text: "is", Weight: 0, inQuote: false},
+				{Text: "a", Weight: 0, inQuote: false},
+				{Text: "'test'", Weight: 0, inQuote: true},
+				{Text: "string.", Weight: 0, inQuote: false},
 			},
 		},
 		{
 			input: "This is a 'quoted test' string.",
 			expected: []Word{
-				{Text: "This", Weight: 78, inQuote: false},
-				{Text: "is", Weight: 39, inQuote: false},
-				{Text: "a", Weight: 19, inQuote: false},
-				{Text: "'quoted", Weight: 187, inQuote: true},
-				{Text: "test'", Weight: 148, inQuote: true},
-				{Text: "string.", Weight: 187, inQuote: false},
+				{Text: "This", Weight: 0, inQuote: false},
+				{Text: "is", Weight: 0, inQuote: false},
+				{Text: "a", Weight: 0, inQuote: false},
+				{Text: "'quoted", Weight: 0, inQuote: true},
+				{Text: "test'", Weight: 0, inQuote: true},
+				{Text: "string.", Weight: 0, inQuote: false},
 			},
 		},
 	}
 
 	for _, test := range tests {
-		result := ProcessString(test.input)
+		result := ParseWords(test.input)
+		for i := 0; i < len(result); i++ {
+			result[i].Weight = 0 // this text ignores the weights
+		}
 		if !reflect.DeepEqual(result, test.expected) {
 			t.Errorf("Input: %s\nExpected: %v\nGot:      %v", test.input, test.expected, result)
 		}

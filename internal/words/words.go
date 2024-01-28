@@ -62,14 +62,21 @@ func CalcWeight(s string) int {
 	return int(weight)
 }
 
-// ProcessClipBoardText splits a string into words and calculates their weights
-func ProcessClipBoardText(s string) []Word {
+// TrimPunct trims all punctuation characters but the quote characters
+func TrimPunct(s string) string {
+	fn := func(r rune) bool { return !strings.ContainsRune(Quotes, r) && unicode.IsPunct(r) }
+	return strings.TrimFunc(s, fn)
+}
+
+// ParseWords splits a string into words and calculates their weights
+func ParseWords(s string) []Word {
 	words := []Word{}
 	inQuote := false
 	for _, w := range strings.Fields(s) {
 		w := strings.TrimSpace(w)
 
-		if StartsWithAny(w, Quotes) {
+		// strip punctuation to avoid corner case of: foo ("bar ..."
+		if StartsWithAny(TrimPunct(w), Quotes) {
 			inQuote = true
 		}
 
@@ -78,7 +85,8 @@ func ProcessClipBoardText(s string) []Word {
 			words = append(words, word)
 		}
 
-		if EndsWithAny(w, Quotes) {
+		// strip punctuation to avoid corner case of: "... foo". bar...
+		if EndsWithAny(TrimPunct(w), Quotes) {
 			inQuote = false
 		}
 	}
