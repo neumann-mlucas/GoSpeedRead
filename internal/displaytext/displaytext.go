@@ -13,6 +13,12 @@ type DisplayText struct {
 	WPM   int
 }
 
+type DisplayState struct {
+	Text string
+	Time time.Duration
+	Prct int
+}
+
 // NewDisplayText Constructs a DisplayText object
 func New(wpm int) *DisplayText {
 	return &DisplayText{
@@ -29,17 +35,17 @@ func (t *DisplayText) GetClipBoard() {
 		fmt.Println("Error reading clipboard:", err)
 		content = "ERROR_WHILE_READING_CLIPBOARD"
 	}
+	content = LOREN
 
-	words := words.ProcessClipBoardText(content)
-	// words = append(words, words.Word{}) // ???
+	words := words.ParseWords(content)
 	t.Words = words
 }
 
-// Step gets the next Word to be display and increments the object position
-func (t *DisplayText) Step() (string, time.Duration) {
+// Step gets the next Word to be display and increments the index position
+func (t *DisplayText) Step() DisplayState {
 	defer t.IncIndex(+1)
 	word := t.Words[t.Index]
-	return word.String(), t.DisplayTime(word)
+	return DisplayState{word.String(), t.DisplayTime(word), t.Percentage()}
 }
 
 // DisplayTime calculates the display time in millisecond of a given Word
@@ -47,22 +53,6 @@ func (t *DisplayText) DisplayTime(word words.Word) time.Duration {
 	wps := float64(t.WPM) / 60.0
 	seconds := float64(word.Weight) / wps
 	return time.Duration(seconds) * time.Millisecond
-}
-
-// HandleCmd given a cmd from the UI it updates the internal state of DisplayText
-func (t *DisplayText) HandleCmd(cmd string) {
-	switch cmd {
-	case "inc":
-		t.IncIndex(+5)
-	case "dec":
-		t.IncIndex(-5)
-	case "restart":
-		t.Index = 0
-	case "inc WPM":
-		t.WPM += 10
-	case "dec WPM":
-		t.WPM -= 10
-	}
 }
 
 // IncIndex increments or decrements the index position by a given amount
