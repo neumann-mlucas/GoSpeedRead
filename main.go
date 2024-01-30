@@ -5,16 +5,14 @@ import (
 	"time"
 
 	"internal/displaytext"
+	"internal/uielements"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	// "fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
-	// "fyne.io/fyne/v2/layout"
-	// "fyne.io/fyne/v2/data/binding"
 )
 
 const (
@@ -28,6 +26,9 @@ type SpeedRead struct {
 	Center *fyne.Container
 	Bottom *fyne.Container
 	Window *fyne.Container
+
+	bind binding.Float
+	// binds  map[string]*binding.Float
 
 	labels map[string]*canvas.Text
 	text   *displaytext.DisplayText
@@ -58,17 +59,20 @@ func NewSpeedRead() *SpeedRead {
 		labels: make(map[string]*canvas.Text),
 		text:   displaytext.New(WPM),
 
+		bind: binding.NewFloat(),
+
 		in:     make(chan string),
 		out:    make(chan displaytext.DisplayState),
 		signal: make(chan struct{}),
 	}
 
-	app.Top = app.BuildTopBar()
-	app.Center = app.BuildCenterBox()
-	app.Bottom = app.BuildBottomBar()
+	app.Top = uielements.BuildTopBar(app.newLabel("WPM", ""), app.newLabel("PCT", ""))
+
+	app.Center = uielements.BuildCenterBox(app.newLabel("WordPrevious", ""), app.newLabel("WordCurrent", " READY "), app.newLabel("WordNext", ""))
+
+	app.Bottom = uielements.BuildBottomBar(app.in, app.bind)
 
 	app.Window = container.NewBorder(app.Top, app.Bottom, nil, nil, app.Center)
-
 	return app
 }
 
@@ -76,47 +80,6 @@ func (s *SpeedRead) newLabel(name string, value string) *canvas.Text {
 	w := canvas.NewText(value, theme.ForegroundColor())
 	s.labels[name] = w
 	return w
-}
-
-func (s *SpeedRead) BuildTopBar() *fyne.Container {
-	wpm := s.newLabel("WPM", " WPM:  l00")
-	pct := s.newLabel("PCT", " Progress:       0%")
-
-	wpm.Alignment = fyne.TextAlignLeading
-	pct.Alignment = fyne.TextAlignTrailing
-
-	return container.NewGridWithColumns(2, wpm, pct)
-}
-
-func (s *SpeedRead) BuildBottomBar() *fyne.Container {
-	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), func() {
-		s.in <- "play"
-	})
-	fowardButton := widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), func() {
-		s.in <- "inc"
-	})
-	rewindButton := widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), func() {
-		s.in <- "dec"
-	})
-
-	return container.NewGridWithColumns(3, rewindButton, playButton, fowardButton)
-}
-
-func (s *SpeedRead) BuildCenterBox() *fyne.Container {
-	centerLabel := s.newLabel("W_CURRENT", "PLAY")
-	leftLabel := s.newLabel("W_PREVIOUS", "")
-	rightLabel := s.newLabel("W_NEXT", "")
-
-	centerLabel.Alignment = fyne.TextAlignCenter
-	centerLabel.TextStyle = fyne.TextStyle{Bold: true}
-	centerLabel.TextSize = 32
-
-	centerContainer := container.NewCenter(container.NewStack(centerLabel))
-
-	rightLabel.Alignment = fyne.TextAlignLeading
-	leftLabel.Alignment = fyne.TextAlignTrailing
-
-	return container.NewGridWithColumns(3, leftLabel, centerContainer, rightLabel)
 }
 
 func (sr *SpeedRead) HandleCMD() {
@@ -155,11 +118,16 @@ func (sr *SpeedRead) Play() {
 				sr.in <- "step"
 				state := <-sr.out
 
-				sr.labels["W_CURRENT"].Text = state.Text
-				sr.labels["W_CURRENT"].Refresh()
+				sr.labels["WordCurrent"].Text = state.Text
+				sr.labels["WordCurrent"].Refresh()
 
-				sr.labels["PCT"].Text = fmt.Sprintf(" Progress:%8d%%", state.Prct)
+				sr.labels["PCT"].Text = fmt.Sprintf("  Progress:%8d%%  ", int(100*state.Prct))
 				sr.labels["PCT"].Refresh()
+
+				sr.labels["WPM"].Text = fmt.Sprintf("  WPM:%8d  ", sr.text.WPM)
+				sr.labels["WPM"].Refresh()
+
+				sr.bind.Set(state.Prct)
 
 				time.Sleep(state.Time)
 			}

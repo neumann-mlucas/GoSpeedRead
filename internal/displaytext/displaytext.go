@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+const (
+	LOREN = `
+Lorem ipsum dolor sit amet, "consectetur adipiscing elit. Nunc rutrum tincidunt massa". Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum vel elit ut nisi fermentum lacinia et et dolor. Aliquam lacinia et lacus eget ultrices. Phasellus at arcu ex. Donec interdum venenatis mi eu tempus. Proin convallis est libero, ut luctus dolor lobortis eu. Etiam a egestas odio. Donec vitae nisl mauris. Praesent interdum lectus quis odio maximus, a posuere turpis rutrum.
+Donec quis libero ipsum. Nulla faucibus sapien pulvinar aliquet pretium. Aliquam quis mattis nulla. Donec sodales viverra convallis. Integer mollis luctus orci id vulputate. In eget sem lobortis, congue arcu ac, scelerisque velit. Quisque nec consequat massa. Etiam mattis accumsan porta. Nulla rutrum sapien felis, egestas fermentum elit molestie ut. Suspendisse viverra convallis risus, non rutrum metus lacinia sed.
+Etiam a malesuada odio, et luctus nunc. Cras sit amet scelerisque justo, a tincidunt nibh. Sed aliquam pretium imperdiet. Etiam quis egestas lectus, eu volutpat dui. Vivamus congue tincidunt nulla, sit amet vulputate risus mattis ac. Ut dapibus odio nisi, eu posuere augue luctus eget. Donec eu arcu eu ante ultricies sollicitudin. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec nec arcu ut eros rhoncus vulputate nec eu magna. Cras hendrerit gravida libero vel condimentum. Vivamus augue massa, volutpat non interdum sit amet, ultricies nec turpis. Phasellus eget finibus enim, a tempus ligula. Maecenas metus velit, tincidunt in libero sed, consequat consectetur urna. Proin a interdum quam. Integer ultrices viverra tristique.
+Nullam lobortis, tellus vitae finibus tincidunt, nunc lorem fermentum ante, sit amet aliquam elit felis quis massa. Cras venenatis tortor eget urna malesuada lacinia. Vestibulum molestie aliquam quam, non molestie felis venenatis vitae. Aenean lobortis tortor quis suscipit imperdiet. Proin mollis sit amet nulla a pretium. Aliquam id nunc libero. Curabitur ac malesuada mauris. Integer volutpat lorem sit amet sapien lobortis, id elementum quam sollicitudin. Cras dignissim sem eu urna varius, ac dignissim purus ornare. Pellentesque at ultrices felis. Morbi finibus eleifend lectus vitae dignissim. Maecenas et tortor at leo semper aliquam. Morbi quis dolor id urna aliquet consequat quis vel libero. Ut ac ante ac enim finibus consectetur pretium pharetra mi. Vivamus nibh magna, condimentum sit amet dolor id, malesuada commodo diam. Suspendisse potenti.
+Donec in vulputate ipsum. Sed nisl dui, porttitor in ante non, pellentesque porta augue. Ut tincidunt porta tincidunt. Suspendisse sed nulla nec lacus porta pharetra sit amet aliquet lacus. Nam sed augue facilisis, feugiat ex eu, iaculis ex. Mauris dignissim felis ac turpis porttitor tincidunt. Vestibulum sit amet iaculis massa. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ultrices auctor lacinia. Integer accumsan porta tortor, id maximus tortor efficitur at. Curabitur fermentum ante id libero lobortis, eu efficitur tortor convallis. Phasellus posuere egestas tortor sit amet venenatis. Vestibulum ut commodo nulla, ac tristique ante. Vestibulum placerat ipsum vitae enim dapibus vehicula. Integer at dui eleifend, scelerisque justo eget, efficitur risus. In sed odio at tortor venenatis viverra quis at ante.`
+)
+
 type DisplayText struct {
 	Words []words.Word
 	Index int
@@ -16,7 +25,7 @@ type DisplayText struct {
 type DisplayState struct {
 	Text string
 	Time time.Duration
-	Prct int
+	Prct float64
 }
 
 // NewDisplayText Constructs a DisplayText object
@@ -70,6 +79,6 @@ func (t *DisplayText) IsLastWord() bool {
 }
 
 // Percentage returns the relative position of the index
-func (t *DisplayText) Percentage() int {
-	return 100 * t.Index / len(t.Words)
+func (t *DisplayText) Percentage() float64 {
+	return float64(t.Index) / float64(len(t.Words))
 }
