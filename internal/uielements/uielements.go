@@ -10,36 +10,25 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// type CustomProgressBar struct {
-// 	*widget.ProgressBar
-// 	minHeight float32
-// }
+type CustomProgressBar struct {
+	widget.ProgressBar
+	minHeight float32
+}
 
-// func NewCustomProgressBar(data binding.Float, minHeight float32) *CustomProgressBar {
-// 	bar := &CustomProgressBar{ProgressBar: widget.NewProgressBarWithData(data), minHeight: minHeight}
-//
-// 	// item.Title.Truncation = fyne.TextTruncateEllipsis
-// 	// bar.ExtendBaseWidget(bar)
-// 	// bar.ExtendBaseWidget(bar.ProgressBar)
-// 	bar.ExtendBaseWidget(bar)
-// 	// bar.TextFormater = func() string { return "" }
-// 	return bar
-// 	// return &CustomProgressBar{ProgressBar: widget.NewProgressBarWithData(data), minHeight: minHeight, TextFormater = func() string { return "" }}
-// }
-
-// func (c *CustomProgressBar) MinSize() fyne.Size {
-// 	minSize := c.ProgressBar.MinSize()
-// 	if c.minHeight < minSize.Height {
-// 		return fyne.NewSize(minSize.Width, c.minHeight)
-// 	}
-// 	return minSize
-// }
-
-func NewCustomProgressBar(data binding.Float, minHeight float32) *widget.ProgressBar {
-	progressBar := widget.NewProgressBarWithData(data)
-	// customHeightContainer := container.NewWithoutLayout(progressBar)
-	// customHeightContainer.Resize(fyne.NewSize(600, 30)) // Set desired width and height
+func NewCustomProgressBar(data binding.Float, minHeight float32) *CustomProgressBar {
+	progressBar := &CustomProgressBar{minHeight: minHeight}
+	progressBar.ExtendBaseWidget(progressBar)
+	progressBar.TextFormatter = func() string { return "" }
+	progressBar.Bind(data)
 	return progressBar
+}
+
+func (c *CustomProgressBar) MinSize() fyne.Size {
+	minSize := c.ProgressBar.MinSize()
+	if c.minHeight < minSize.Height {
+		return fyne.NewSize(minSize.Width, c.minHeight)
+	}
+	return minSize
 }
 
 func BuildTopBar(left, right *canvas.Text) *fyne.Container {

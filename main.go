@@ -27,15 +27,14 @@ type SpeedRead struct {
 	Bottom *fyne.Container
 	Window *fyne.Container
 
-	bind binding.Float
-	// binds  map[string]*binding.Float
-
 	labels map[string]*canvas.Text
 	text   *displaytext.DisplayText
 
 	in     chan string
 	out    chan displaytext.DisplayState
 	signal chan struct{}
+
+	progress binding.Float
 }
 
 func main() {
@@ -59,11 +58,11 @@ func NewSpeedRead() *SpeedRead {
 		labels: make(map[string]*canvas.Text),
 		text:   displaytext.New(WPM),
 
-		bind: binding.NewFloat(),
-
 		in:     make(chan string),
 		out:    make(chan displaytext.DisplayState),
 		signal: make(chan struct{}),
+
+		progress: binding.NewFloat(),
 	}
 
 	app.Top = uielements.BuildTopBar(app.newLabel("WPM", ""), app.newLabel("PCT", ""))
@@ -127,7 +126,7 @@ func (sr *SpeedRead) Play() {
 				sr.labels["WPM"].Text = fmt.Sprintf("  WPM:%8d  ", sr.text.WPM)
 				sr.labels["WPM"].Refresh()
 
-				sr.bind.Set(state.Prct)
+				sr.progress.Set(state.Prct)
 
 				time.Sleep(state.Time)
 			}
