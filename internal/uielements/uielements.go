@@ -6,7 +6,9 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
+
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -31,14 +33,24 @@ func (c *CustomProgressBar) MinSize() fyne.Size {
 	return minSize
 }
 
-func BuildTopBar(left, right *canvas.Text) *fyne.Container {
-	left.Text = fmt.Sprintf("  WPM:%8d  ", 300)
-	right.Text = fmt.Sprintf("  Progress:%8d%%  ", 0)
+func BuildTopBar(cmdChan chan string, wpm *canvas.Text) *fyne.Container {
+	wpm.Text = fmt.Sprintf("  WPM:%4d  ", 300)
+	wpm.TextStyle.Bold = true
 
-	left.Alignment = fyne.TextAlignLeading
-	right.Alignment = fyne.TextAlignTrailing
+	incButton := widget.NewButtonWithIcon("", theme.ContentAddIcon(), func() {
+		cmdChan <- "inc wpm"
+	})
+	decButton := widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), func() {
+		cmdChan <- "dec wpm"
+	})
+	resetButton := widget.NewButtonWithIcon("", theme.MediaReplayIcon(), func() {
+		cmdChan <- "restart"
+	})
 
-	return container.NewGridWithColumns(2, left, right)
+	left := container.NewHBox(decButton, wpm, incButton, layout.NewSpacer())
+	right := container.NewGridWithColumns(3, layout.NewSpacer(), layout.NewSpacer(), resetButton)
+
+	return container.NewGridWithColumns(3, left, layout.NewSpacer(), right)
 }
 
 func BuildBottomBar(cmdChan chan string, progress binding.Float) *fyne.Container {

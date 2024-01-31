@@ -65,11 +65,11 @@ func NewSpeedRead() *SpeedRead {
 		progress: binding.NewFloat(),
 	}
 
-	app.Top = uielements.BuildTopBar(app.newLabel("WPM", ""), app.newLabel("PCT", ""))
+	app.Top = uielements.BuildTopBar(app.in, app.newLabel("WPM", ""))
 
 	app.Center = uielements.BuildCenterBox(app.newLabel("WordPrevious", ""), app.newLabel("WordCurrent", " READY "), app.newLabel("WordNext", ""))
 
-	app.Bottom = uielements.BuildBottomBar(app.in, app.bind)
+	app.Bottom = uielements.BuildBottomBar(app.in, app.progress)
 
 	app.Window = container.NewBorder(app.Top, app.Bottom, nil, nil, app.Center)
 	return app
@@ -120,10 +120,7 @@ func (sr *SpeedRead) Play() {
 				sr.labels["WordCurrent"].Text = state.Text
 				sr.labels["WordCurrent"].Refresh()
 
-				sr.labels["PCT"].Text = fmt.Sprintf("  Progress:%8d%%  ", int(100*state.Prct))
-				sr.labels["PCT"].Refresh()
-
-				sr.labels["WPM"].Text = fmt.Sprintf("  WPM:%8d  ", sr.text.WPM)
+				sr.labels["WPM"].Text = fmt.Sprintf("  WPM:%4d  ", sr.text.WPM)
 				sr.labels["WPM"].Refresh()
 
 				sr.progress.Set(state.Prct)
