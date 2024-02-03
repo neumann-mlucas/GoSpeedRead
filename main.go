@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
@@ -15,10 +16,10 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-const (
-	WPM    = 300
-	Width  = 800
-	Height = 200
+var (
+	Width  int
+	Height int
+	WPM    int
 )
 
 type SpeedRead struct {
@@ -38,20 +39,34 @@ type SpeedRead struct {
 }
 
 func main() {
+	// Parse the flags
+	flag.IntVar(&Width, "width", 800, "The width of the window")
+	flag.IntVar(&Height, "height", 200, "The height of the window")
+	flag.IntVar(&WPM, "WPM", 300, "Word per minute")
+	flag.Parse()
+
+	// Create Window
 	myApp := app.New()
 	myWindow := myApp.NewWindow("SpeedRead")
 
+	// Create Appp
 	app := NewSpeedRead()
 	content := app.Window
 
+	// Set window content
 	myWindow.SetContent(content)
-	myWindow.Resize(fyne.NewSize(Width, Height))
+	myWindow.Resize(fyne.NewSize(float32(Width), float32(Height)))
 
+	// Set keybidings
 	myWindow.Canvas().SetOnTypedKey(app.HandleKey)
 
+	// Set goroutine to handle interactions
 	go app.HandleCMD()
+
+	// Set run loop / update ui
 	go app.Run()
 
+	// Run
 	myWindow.ShowAndRun()
 }
 
@@ -114,8 +129,9 @@ func (sr *SpeedRead) HandleCMD() {
 		case "restart":
 			sr.text.Index = 0
 		case "play":
-			if sr.text.AtStartOrEnd() {
+			if sr.text.IsFirstOrLastWord() {
 				sr.text.GetClipBoard()
+				sr.text.Index = 0 // reset index
 			}
 			sr.pause <- struct{}{}
 		case "inc":
@@ -146,6 +162,12 @@ func (sr *SpeedRead) Run() {
 
 				sr.labels["WordCurrent"].Text = state.Text
 				sr.labels["WordCurrent"].Refresh()
+
+				sr.labels["WordNext"].Text = state.Next[:min(len(state.Next), 16)]
+				sr.labels["WordNext"].Refresh()
+
+				sr.labels["WordPrevious"].Text = state.Prev[max(0, len(state.Prev)-16):]
+				sr.labels["WordPrevious"].Refresh()
 
 				sr.labels["WPM"].Text = fmt.Sprintf("  WPM:%4d  ", sr.text.WPM)
 				sr.labels["WPM"].Refresh()
