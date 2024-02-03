@@ -30,9 +30,9 @@ type SpeedRead struct {
 	labels map[string]*canvas.Text
 	text   *displaytext.DisplayText
 
-	in     chan string
-	out    chan displaytext.DisplayState
-	signal chan struct{}
+	inp   chan string
+	out   chan displaytext.DisplayState
+	pause chan struct{}
 
 	progress binding.Float
 }
@@ -47,42 +47,66 @@ func main() {
 	myWindow.SetContent(content)
 	myWindow.Resize(fyne.NewSize(Width, Height))
 
+	myWindow.Canvas().SetOnTypedKey(app.HandleKey)
+
 	go app.HandleCMD()
-	go app.Play()
+	go app.Run()
 
 	myWindow.ShowAndRun()
 }
 
+// NewSpeedRead creates a new app
 func NewSpeedRead() *SpeedRead {
 	app := &SpeedRead{
 		labels: make(map[string]*canvas.Text),
 		text:   displaytext.New(WPM),
 
-		in:     make(chan string),
-		out:    make(chan displaytext.DisplayState),
-		signal: make(chan struct{}),
+		inp:   make(chan string),
+		out:   make(chan displaytext.DisplayState),
+		pause: make(chan struct{}),
 
 		progress: binding.NewFloat(),
 	}
 
-	app.Top = uielements.BuildTopBar(app.in, app.newLabel("WPM", ""))
+	app.Top = uielements.BuildTopBar(app.inp, app.newLabel("WPM", ""))
 
 	app.Center = uielements.BuildCenterBox(app.newLabel("WordPrevious", ""), app.newLabel("WordCurrent", " READY "), app.newLabel("WordNext", ""))
 
-	app.Bottom = uielements.BuildBottomBar(app.in, app.progress)
+	app.Bottom = uielements.BuildBottomBar(app.inp, app.progress)
 
 	app.Window = container.NewBorder(app.Top, app.Bottom, nil, nil, app.Center)
+
 	return app
 }
 
-func (s *SpeedRead) newLabel(name string, value string) *canvas.Text {
+// newwLabel registers a new text label the the app `labels` map
+func (sr *SpeedRead) newLabel(name string, value string) *canvas.Text {
 	w := canvas.NewText(value, theme.ForegroundColor())
-	s.labels[name] = w
+	sr.labels[name] = w
 	return w
 }
 
+// HandleKey handles keyboard user input
+func (sr *SpeedRead) HandleKey(k *fyne.KeyEvent) {
+	switch k.Name {
+	case fyne.KeySpace:
+		sr.inp <- "play"
+	case fyne.KeyR:
+		sr.inp <- "restart"
+	case fyne.KeyH, fyne.KeyLeft:
+		sr.inp <- "dec"
+	case fyne.KeyJ, fyne.KeyDown:
+		sr.inp <- "dec wpm"
+	case fyne.KeyK, fyne.KeyUp:
+		sr.inp <- "inc wpm"
+	case fyne.KeyL, fyne.KeyRight:
+		sr.inp <- "inc"
+	}
+}
+
+// HandleCMD alters the state of DisplayText base on a command
 func (sr *SpeedRead) HandleCMD() {
-	for cmd := range sr.in {
+	for cmd := range sr.inp {
 		switch cmd {
 		case "step":
 			resp := sr.text.Step()
@@ -90,8 +114,10 @@ func (sr *SpeedRead) HandleCMD() {
 		case "restart":
 			sr.text.Index = 0
 		case "play":
-			sr.text.GetClipBoard()
-			sr.signal <- struct{}{}
+			if sr.text.AtStartOrEnd() {
+				sr.text.GetClipBoard()
+			}
+			sr.pause <- struct{}{}
 		case "inc":
 			sr.text.IncIndex(+5)
 		case "dec":
@@ -99,22 +125,23 @@ func (sr *SpeedRead) HandleCMD() {
 		case "inc wpm":
 			sr.text.WPM += 10
 		case "dec wpm":
-			sr.text.WPM += 10
+			sr.text.WPM -= 10
 		}
 
 	}
 }
 
-func (sr *SpeedRead) Play() {
+// Run updates the UI
+func (sr *SpeedRead) Run() {
 	for {
-		<-sr.signal
+		<-sr.pause
 		for !sr.text.IsLastWord() {
 			select {
-			case <-sr.signal:
-				<-sr.signal
+			case <-sr.pause:
+				<-sr.pause
 
 			default:
-				sr.in <- "step"
+				sr.inp <- "step"
 				state := <-sr.out
 
 				sr.labels["WordCurrent"].Text = state.Text
