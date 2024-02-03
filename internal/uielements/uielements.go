@@ -77,8 +77,8 @@ func BuildBottomBar(cmdChan chan string, progress binding.Float) *fyne.Container
 func BuildCenterBox(left, center, right *canvas.Text) *fyne.Container {
 	center.Text = " Ready "
 
-	left.Text = " >>> "
-	right.Text = " <<< "
+	left.Text = ""
+	right.Text = ""
 
 	center.Alignment = fyne.TextAlignCenter
 	center.TextStyle = fyne.TextStyle{Bold: true}
@@ -87,7 +87,10 @@ func BuildCenterBox(left, center, right *canvas.Text) *fyne.Container {
 	centerContainer := container.NewCenter(container.NewStack(center))
 
 	right.Alignment = fyne.TextAlignLeading
+	right.TextSize = 16
+
 	left.Alignment = fyne.TextAlignTrailing
+	left.TextSize = 16
 
 	return container.NewGridWithColumns(3, left, centerContainer, right)
 }
