@@ -83,6 +83,7 @@ func (t *DisplayText) Percentage() float64 {
 	return float64(t.Index) / float64(len(t.Words))
 }
 
+// AtStartOrEnd returns true if Index it at the first or last position
 func (t *DisplayText) AtStartOrEnd() bool {
 	return t.Index == 0 || t.Index == len(t.Words)
 }

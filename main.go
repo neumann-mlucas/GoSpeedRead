@@ -79,7 +79,7 @@ func NewSpeedRead() *SpeedRead {
 	return app
 }
 
-// newwLabel registers a new text label the the app `labels` map
+// newLabel registers a new text label the the app `labels` map
 func (sr *SpeedRead) newLabel(name string, value string) *canvas.Text {
 	w := canvas.NewText(value, theme.ForegroundColor())
 	sr.labels[name] = w

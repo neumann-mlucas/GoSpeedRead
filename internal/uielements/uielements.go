@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
-
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -17,6 +16,7 @@ type CustomProgressBar struct {
 	minHeight float32
 }
 
+// NewCustomProgressBar creates a fyne progress bar with a custom height
 func NewCustomProgressBar(data binding.Float, minHeight float32) *CustomProgressBar {
 	progressBar := &CustomProgressBar{minHeight: minHeight}
 	progressBar.ExtendBaseWidget(progressBar)
@@ -25,6 +25,7 @@ func NewCustomProgressBar(data binding.Float, minHeight float32) *CustomProgress
 	return progressBar
 }
 
+// MinSize overrides original method
 func (c *CustomProgressBar) MinSize() fyne.Size {
 	minSize := c.ProgressBar.MinSize()
 	if c.minHeight < minSize.Height {
@@ -33,6 +34,7 @@ func (c *CustomProgressBar) MinSize() fyne.Size {
 	return minSize
 }
 
+// BuildTopBar creates the top display and maps buttons to commands
 func BuildTopBar(cmdChan chan string, wpm *canvas.Text) *fyne.Container {
 	wpm.Text = fmt.Sprintf("  WPM:%4d  ", 300)
 	wpm.TextStyle.Bold = true
@@ -53,6 +55,7 @@ func BuildTopBar(cmdChan chan string, wpm *canvas.Text) *fyne.Container {
 	return container.NewGridWithColumns(3, left, layout.NewSpacer(), right)
 }
 
+// BuildBottomBar creates the botton display and maps buttons to commands
 func BuildBottomBar(cmdChan chan string, progress binding.Float) *fyne.Container {
 	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), func() {
 		cmdChan <- "play"
@@ -70,6 +73,7 @@ func BuildBottomBar(cmdChan chan string, progress binding.Float) *fyne.Container
 	return container.NewVBox(progressBar, container.NewGridWithColumns(3, rewindButton, playButton, fowardButton))
 }
 
+// BuildCenterBox builds main display where the Clipboard text will be displayed
 func BuildCenterBox(left, center, right *canvas.Text) *fyne.Container {
 	center.Text = " Ready "
 
