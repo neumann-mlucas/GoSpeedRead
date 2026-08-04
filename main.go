@@ -113,9 +113,9 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 
 	sr.setCurrentWord(" READY ", -1)
 
-	centerGroup := container.NewCenter(container.NewHBox(
+	centerGroup := container.New(orpLayout{},
 		sr.wordCurrentPrefix, sr.wordCurrentFocal, sr.wordCurrentSuffix,
-	))
+	)
 
 	top := uielements.BuildTopBar(wpm, sr.wpmLabel, sr.incWPM, sr.decWPM, sr.restart)
 	center := uielements.BuildCenterBox(sr.wordPrevious, centerGroup, sr.wordNext)
@@ -281,4 +281,39 @@ func tailRunes(s string, n int) string {
 		return s
 	}
 	return string(r[len(r)-n:])
+}
+
+// orpLayout positions three canvas objects (prefix, focal, suffix) with the
+// focal object's horizontal center locked to the container center. This anchors
+// the ORP letter to a fixed screen column so the reader's eye doesn't chase it.
+type orpLayout struct{}
+
+func (orpLayout) MinSize(objs []fyne.CanvasObject) fyne.Size {
+	var maxH, totalW float32
+	for _, o := range objs {
+		s := o.MinSize()
+		if s.Height > maxH {
+			maxH = s.Height
+		}
+		totalW += s.Width
+	}
+	return fyne.NewSize(totalW, maxH)
+}
+
+func (orpLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
+	if len(objs) != 3 {
+		return
+	}
+	prefix, focal, suffix := objs[0], objs[1], objs[2]
+	ps, fs, ss := prefix.MinSize(), focal.MinSize(), suffix.MinSize()
+
+	fx := size.Width/2 - fs.Width/2
+	yFor := func(h float32) float32 { return (size.Height - h) / 2 }
+
+	focal.Resize(fs)
+	focal.Move(fyne.NewPos(fx, yFor(fs.Height)))
+	prefix.Resize(ps)
+	prefix.Move(fyne.NewPos(fx-ps.Width, yFor(ps.Height)))
+	suffix.Resize(ss)
+	suffix.Move(fyne.NewPos(fx+fs.Width, yFor(ss.Height)))
 }
