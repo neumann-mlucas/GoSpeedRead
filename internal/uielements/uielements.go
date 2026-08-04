@@ -35,19 +35,13 @@ func (c *CustomProgressBar) MinSize() fyne.Size {
 }
 
 // BuildTopBar creates the top display and maps buttons to commands
-func BuildTopBar(cmdChan chan string, wpm *canvas.Text) *fyne.Container {
-	wpm.Text = fmt.Sprintf("  WPM:%4d  ", 300)
+func BuildTopBar(initialWPM int, wpm *canvas.Text, incWPM, decWPM, restart func()) *fyne.Container {
+	wpm.Text = fmt.Sprintf("  WPM:%4d  ", initialWPM)
 	wpm.TextStyle.Bold = true
 
-	incButton := widget.NewButtonWithIcon("", theme.ContentAddIcon(), func() {
-		cmdChan <- "inc wpm"
-	})
-	decButton := widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), func() {
-		cmdChan <- "dec wpm"
-	})
-	resetButton := widget.NewButtonWithIcon("", theme.MediaReplayIcon(), func() {
-		cmdChan <- "restart"
-	})
+	incButton := widget.NewButtonWithIcon("", theme.ContentAddIcon(), incWPM)
+	decButton := widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), decWPM)
+	resetButton := widget.NewButtonWithIcon("", theme.MediaReplayIcon(), restart)
 
 	left := container.NewHBox(decButton, wpm, incButton, layout.NewSpacer())
 	right := container.NewGridWithColumns(3, layout.NewSpacer(), layout.NewSpacer(), resetButton)
@@ -55,42 +49,25 @@ func BuildTopBar(cmdChan chan string, wpm *canvas.Text) *fyne.Container {
 	return container.NewGridWithColumns(3, left, layout.NewSpacer(), right)
 }
 
-// BuildBottomBar creates the botton display and maps buttons to commands
-func BuildBottomBar(cmdChan chan string, progress binding.Float) *fyne.Container {
-	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), func() {
-		cmdChan <- "play"
-	})
-	fowardButton := widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), func() {
-		cmdChan <- "inc"
-	})
-	rewindButton := widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), func() {
-		cmdChan <- "dec"
-	})
+// BuildBottomBar creates the bottom display and returns the container + play button
+// so caller can toggle the play/pause icon.
+func BuildBottomBar(progress binding.Float, position *canvas.Text, play, forward, back func()) (*fyne.Container, *widget.Button) {
+	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), play)
+	forwardButton := widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), forward)
+	rewindButton := widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), back)
 
 	progress.Set(0)
 	progressBar := NewCustomProgressBar(progress, 8)
 
-	return container.NewVBox(progressBar, container.NewGridWithColumns(3, rewindButton, playButton, fowardButton))
+	progressRow := container.NewBorder(nil, nil, nil, position, progressBar)
+	buttons := container.NewGridWithColumns(3, rewindButton, playButton, forwardButton)
+	return container.NewVBox(progressRow, buttons), playButton
 }
 
-// BuildCenterBox builds main display where the Clipboard text will be displayed
-func BuildCenterBox(left, center, right *canvas.Text) *fyne.Container {
-	center.Text = " Ready "
-
-	left.Text = ""
-	right.Text = ""
-
-	center.Alignment = fyne.TextAlignCenter
-	center.TextStyle = fyne.TextStyle{Bold: true}
-	center.TextSize = 32
-
-	centerContainer := container.NewCenter(container.NewStack(center))
-
-	right.Alignment = fyne.TextAlignLeading
-	right.TextSize = 16
-
+// BuildCenterBox builds the main display. `center` can be any CanvasObject
+// (e.g. a container of three text spans for ORP highlighting).
+func BuildCenterBox(left *canvas.Text, center fyne.CanvasObject, right *canvas.Text) *fyne.Container {
 	left.Alignment = fyne.TextAlignTrailing
-	left.TextSize = 16
-
-	return container.NewGridWithColumns(3, left, centerContainer, right)
+	right.Alignment = fyne.TextAlignLeading
+	return container.NewGridWithColumns(3, left, center, right)
 }

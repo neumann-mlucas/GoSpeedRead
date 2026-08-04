@@ -10,6 +10,7 @@ const (
 	MeanWordLenght    = 5.1
 	MinimumWeight     = 800
 	PunctuationWeight = 500
+	ParagraphWeight   = 1500
 )
 
 type Word struct {
@@ -68,27 +69,30 @@ func TrimPunct(s string) string {
 	return strings.TrimFunc(s, fn)
 }
 
-// ParseWords splits a string into words and calculates their weights
+// ParseWords splits a string into words and calculates their weights.
+// Words at paragraph boundaries (\n\n) get an extra ParagraphWeight pause.
 func ParseWords(s string) []Word {
-	words := []Word{}
-	inQuote := false
-	for _, w := range strings.Fields(s) {
-		w := strings.TrimSpace(w)
-
-		// strip punctuation to avoid corner case of: foo ("bar ..."
-		if StartsWithAny(TrimPunct(w), Quotes) {
-			inQuote = true
-		}
-
-		if len(w) > 0 {
-			word := Word{Text: w, Weight: CalcWeight(w), inQuote: inQuote}
-			words = append(words, word)
-		}
-
-		// strip punctuation to avoid corner case of: "... foo". bar...
-		if EndsWithAny(TrimPunct(w), Quotes) {
-			inQuote = false
+	out := []Word{}
+	paragraphs := strings.Split(s, "\n\n")
+	for pi, p := range paragraphs {
+		inQuote := false
+		pieces := strings.Fields(p)
+		for i, raw := range pieces {
+			w := strings.TrimSpace(raw)
+			if StartsWithAny(TrimPunct(w), Quotes) {
+				inQuote = true
+			}
+			if len(w) > 0 {
+				weight := CalcWeight(w)
+				if i == len(pieces)-1 && pi < len(paragraphs)-1 {
+					weight += ParagraphWeight
+				}
+				out = append(out, Word{Text: w, Weight: weight, inQuote: inQuote})
+			}
+			if EndsWithAny(TrimPunct(w), Quotes) {
+				inQuote = false
+			}
 		}
 	}
-	return words
+	return out
 }

@@ -55,7 +55,7 @@ func TestDisplayText_IncIndex(t *testing.T) {
 	}
 }
 
-func TestDisplayText_GetPreviusWords(t *testing.T) {
+func TestDisplayText_GetPreviousWords(t *testing.T) {
 	words := "Lorem ipsum dolor sit amet"
 	tests := []struct {
 		name string
@@ -71,7 +71,7 @@ func TestDisplayText_GetPreviusWords(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dt := setupDisplayText(words)
 			dt.Index = 4
-			r := dt.GetPreviusWords(tt.arg)
+			r := dt.GetPreviousWords(tt.arg)
 			if r != tt.want {
 				t.Errorf("GetNextWords() error W: %s R: %s", tt.want, r)
 			}
@@ -79,7 +79,7 @@ func TestDisplayText_GetPreviusWords(t *testing.T) {
 	}
 	t.Run("at start", func(t *testing.T) {
 		dt := setupDisplayText(words)
-		r := dt.GetPreviusWords(5)
+		r := dt.GetPreviousWords(5)
 		if r != "" {
 			t.Errorf("GetNextWords() error W: %s R: %s", "", r)
 		}
