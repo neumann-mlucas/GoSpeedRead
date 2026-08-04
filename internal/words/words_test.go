@@ -101,7 +101,7 @@ func TestProcessString(t *testing.T) {
 
 	for _, test := range tests {
 		result := ParseWords(test.input)
-		for i := 0; i < len(result); i++ {
+		for i := range result {
 			result[i].Weight = 0 // this text ignores the weights
 		}
 		if !reflect.DeepEqual(result, test.expected) {

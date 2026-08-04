@@ -85,7 +85,7 @@ func main() {
 
 // NewSpeedRead creates a new app
 func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
-	fg := theme.ForegroundColor()
+	fg := theme.Color(theme.ColorNameForeground)
 	previewSize := fontSize * 0.5
 
 	sr := &SpeedRead{
