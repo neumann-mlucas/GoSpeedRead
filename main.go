@@ -91,7 +91,7 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 	sr := &SpeedRead{
 		text:              displaytext.New(wpm),
 		progress:          binding.NewFloat(),
-		wpmLabel:          newLabel(fmt.Sprintf("  WPM:%4d  ", wpm), 0, fg),
+		wpmLabel:          newLabel(wpmText(wpm), 0, fg),
 		helpLabel:         newLabel(helpText, 0, fg),
 		wordCurrentPrefix: newLabel("", fontSize, fg),
 		wordCurrentFocal:  newLabel("", fontSize, focalColor),
@@ -117,7 +117,7 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 		sr.wordCurrentPrefix, sr.wordCurrentFocal, sr.wordCurrentSuffix,
 	)
 
-	top := uielements.BuildTopBar(wpm, sr.wpmLabel, sr.incWPM, sr.decWPM, sr.restart)
+	top := uielements.BuildTopBar(sr.wpmLabel, sr.incWPM, sr.decWPM, sr.restart)
 	center := uielements.BuildCenterBox(sr.wordPrevious, centerGroup, sr.wordNext)
 	bottom, playBtn := uielements.BuildBottomBar(sr.progress, sr.togglePlay, sr.stepForward, sr.stepBack)
 	sr.playButton = playBtn
@@ -261,9 +261,11 @@ func (sr *SpeedRead) render(state displaytext.DisplayState, wpm int) {
 
 		sr.progress.Set(state.Prct)
 	}
-	sr.wpmLabel.Text = fmt.Sprintf("  WPM:%4d  ", wpm)
+	sr.wpmLabel.Text = wpmText(wpm)
 	sr.wpmLabel.Refresh()
 }
+
+func wpmText(wpm int) string { return fmt.Sprintf("  WPM:%4d  ", wpm) }
 
 // headRunes returns first n runes of s (UTF-8 safe).
 func headRunes(s string, n int) string {

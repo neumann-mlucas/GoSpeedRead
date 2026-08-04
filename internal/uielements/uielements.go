@@ -1,7 +1,6 @@
 package uielements
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -34,11 +33,9 @@ func (c *CustomProgressBar) MinSize() fyne.Size {
 	return minSize
 }
 
-// BuildTopBar creates the top display and maps buttons to commands
-func BuildTopBar(initialWPM int, wpm *canvas.Text, incWPM, decWPM, restart func()) *fyne.Container {
-	wpm.Text = fmt.Sprintf("  WPM:%4d  ", initialWPM)
-	wpm.TextStyle.Bold = true
-
+// BuildTopBar creates the top display and maps buttons to commands.
+// Caller sets the wpm label's initial text and style.
+func BuildTopBar(wpm *canvas.Text, incWPM, decWPM, restart func()) *fyne.Container {
 	incButton := widget.NewButtonWithIcon("", theme.ContentAddIcon(), incWPM)
 	decButton := widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), decWPM)
 	resetButton := widget.NewButtonWithIcon("", theme.MediaReplayIcon(), restart)
