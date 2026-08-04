@@ -5,19 +5,18 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
 type CustomProgressBar struct {
 	widget.ProgressBar
-	minHeight float32
+	maxHeight float32
 }
 
 // NewCustomProgressBar creates a fyne progress bar with a custom height
-func NewCustomProgressBar(data binding.Float, minHeight float32) *CustomProgressBar {
-	progressBar := &CustomProgressBar{minHeight: minHeight}
+func NewCustomProgressBar(data binding.Float, maxHeight float32) *CustomProgressBar {
+	progressBar := &CustomProgressBar{maxHeight: maxHeight}
 	progressBar.ExtendBaseWidget(progressBar)
 	progressBar.TextFormatter = func() string { return "" }
 	progressBar.Bind(data)
@@ -27,8 +26,8 @@ func NewCustomProgressBar(data binding.Float, minHeight float32) *CustomProgress
 // MinSize overrides original method
 func (c *CustomProgressBar) MinSize() fyne.Size {
 	minSize := c.ProgressBar.MinSize()
-	if c.minHeight < minSize.Height {
-		return fyne.NewSize(minSize.Width, c.minHeight)
+	if c.maxHeight < minSize.Height {
+		return fyne.NewSize(minSize.Width, c.maxHeight)
 	}
 	return minSize
 }
@@ -40,10 +39,9 @@ func BuildTopBar(wpm *canvas.Text, incWPM, decWPM, restart func()) *fyne.Contain
 	decButton := widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), decWPM)
 	resetButton := widget.NewButtonWithIcon("", theme.MediaReplayIcon(), restart)
 
-	left := container.NewHBox(decButton, wpm, incButton, layout.NewSpacer())
-	right := container.NewGridWithColumns(3, layout.NewSpacer(), layout.NewSpacer(), resetButton)
-
-	return container.NewGridWithColumns(3, left, layout.NewSpacer(), right)
+	left := container.NewHBox(decButton, wpm, incButton)
+	right := container.NewHBox(resetButton)
+	return container.NewBorder(nil, nil, left, right)
 }
 
 // BuildBottomBar creates the bottom display and returns the container + play button

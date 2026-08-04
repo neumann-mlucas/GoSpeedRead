@@ -23,47 +23,6 @@ func TestCalcWeight(t *testing.T) {
 	}
 }
 
-func TestStartsWithAny(t *testing.T) {
-	testCases := []struct {
-		input    string
-		chars    string
-		expected bool
-	}{
-		{"hello", "helo", true},
-		{"world", "abc", false},
-		{"", "abc", false},
-		{"apple", "ac", true},
-	}
-
-	for _, testCase := range testCases {
-		result := StartsWithAny(testCase.input, testCase.chars)
-		if result != testCase.expected {
-			t.Errorf("StartsWithAny(%s, %s) expected %v, but got %v", testCase.input, testCase.chars, testCase.expected, result)
-		}
-	}
-}
-
-func TestEndsWithAny(t *testing.T) {
-	// Test cases for EndsWithAny
-	testCases := []struct {
-		input    string
-		chars    string
-		expected bool
-	}{
-		{"hello", "lo", true},
-		{"world", "abc", false},
-		{"", "abc", false},
-		{"apple", "ep", true},
-	}
-
-	for _, testCase := range testCases {
-		result := EndsWithAny(testCase.input, testCase.chars)
-		if result != testCase.expected {
-			t.Errorf("EndsWithAny(%s, %s) expected %v, but got %v", testCase.input, testCase.chars, testCase.expected, result)
-		}
-	}
-}
-
 func TestProcessString(t *testing.T) {
 	tests := []struct {
 		input    string

@@ -87,29 +87,23 @@ func main() {
 func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 	fg := theme.Color(theme.ColorNameForeground)
 	previewSize := fontSize * 0.5
+	boldMono := fyne.TextStyle{Bold: true, Monospace: true}
+	mono := fyne.TextStyle{Monospace: true}
+	italicMono := fyne.TextStyle{Italic: true, Monospace: true}
 
 	sr := &SpeedRead{
 		text:              displaytext.New(wpm),
 		progress:          binding.NewFloat(),
-		wpmLabel:          newLabel(wpmText(wpm), 0, fg),
-		helpLabel:         newLabel(helpText, 0, fg),
-		wordCurrentPrefix: newLabel("", fontSize, fg),
-		wordCurrentFocal:  newLabel("", fontSize, focalColor),
-		wordCurrentSuffix: newLabel("", fontSize, fg),
-		wordNext:          newLabel("", previewSize, fg),
-		wordPrevious:      newLabel("", previewSize, fg),
+		wpmLabel:          newLabel(wpmText(wpm), 0, fg, boldMono),
+		helpLabel:         newLabel(helpText, 0, fg, italicMono),
+		wordCurrentPrefix: newLabel("", fontSize, fg, boldMono),
+		wordCurrentFocal:  newLabel("", fontSize, focalColor, boldMono),
+		wordCurrentSuffix: newLabel("", fontSize, fg, boldMono),
+		wordNext:          newLabel("", previewSize, fg, mono),
+		wordPrevious:      newLabel("", previewSize, fg, mono),
 	}
 	sr.cond = sync.NewCond(&sr.mu)
-
-	boldMono := fyne.TextStyle{Bold: true, Monospace: true}
-	sr.wpmLabel.TextStyle = boldMono
-	sr.helpLabel.TextStyle = fyne.TextStyle{Italic: true, Monospace: true}
 	sr.helpLabel.Hide()
-	sr.wordCurrentPrefix.TextStyle = boldMono
-	sr.wordCurrentFocal.TextStyle = boldMono
-	sr.wordCurrentSuffix.TextStyle = boldMono
-	sr.wordNext.TextStyle = fyne.TextStyle{Monospace: true}
-	sr.wordPrevious.TextStyle = fyne.TextStyle{Monospace: true}
 
 	sr.setCurrentWord(" READY ", -1)
 
@@ -126,11 +120,12 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 	return sr
 }
 
-func newLabel(text string, size float32, c color.Color) *canvas.Text {
+func newLabel(text string, size float32, c color.Color, style fyne.TextStyle) *canvas.Text {
 	t := canvas.NewText(text, c)
 	if size > 0 {
 		t.TextSize = size
 	}
+	t.TextStyle = style
 	return t
 }
 
@@ -181,7 +176,8 @@ func (sr *SpeedRead) HandleRune(r rune) {
 
 func (sr *SpeedRead) togglePlay() {
 	sr.mu.Lock()
-	if !sr.playing && sr.text.IsFirstOrLastWord() {
+	n := len(sr.text.Words)
+	if !sr.playing && (n == 0 || sr.text.Index == 0 || sr.text.Index >= n-1) {
 		sr.text.GetClipBoard()
 		sr.text.Index = 0
 	}

@@ -3,6 +3,7 @@ package words
 import (
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 const (
@@ -29,26 +30,6 @@ func (w Word) String() string {
 		return " “ " + word + " ” "
 	}
 	return word
-}
-
-// StartsWithAny checks if the input string 's' starts with any of the characters in 'chars'.
-func StartsWithAny(s string, chars string) bool {
-	for _, c := range chars {
-		if strings.HasPrefix(s, string(c)) {
-			return true
-		}
-	}
-	return false
-}
-
-// EndsWithAny checks if the input string 's' ends with any of the characters in 'chars'.
-func EndsWithAny(s string, chars string) bool {
-	for _, c := range chars {
-		if strings.HasSuffix(s, string(c)) {
-			return true
-		}
-	}
-	return false
 }
 
 // CalcWeight calculates the weight of a word based on its length and presence of punctuation.
@@ -79,7 +60,10 @@ func ParseWords(s string) []Word {
 		pieces := strings.Fields(p)
 		for i, raw := range pieces {
 			w := strings.TrimSpace(raw)
-			if StartsWithAny(TrimPunct(w), Quotes) {
+			trimmed := TrimPunct(w)
+			first, _ := utf8.DecodeRuneInString(trimmed)
+			last, _ := utf8.DecodeLastRuneInString(trimmed)
+			if strings.ContainsRune(Quotes, first) {
 				inQuote = true
 			}
 			if len(w) > 0 {
@@ -89,7 +73,7 @@ func ParseWords(s string) []Word {
 				}
 				out = append(out, Word{Text: w, Weight: weight, inQuote: inQuote})
 			}
-			if EndsWithAny(TrimPunct(w), Quotes) {
+			if strings.ContainsRune(Quotes, last) {
 				inQuote = false
 			}
 		}

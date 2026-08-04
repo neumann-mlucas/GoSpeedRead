@@ -88,11 +88,7 @@ func focalOnText(text string) int {
 	for end > start && !isCore(runes[end-1]) {
 		end--
 	}
-	core := end - start
-	if core <= 0 {
-		return 0
-	}
-	return start + ORPIndex(core)
+	return start + ORPIndex(end-start)
 }
 
 func isCore(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
@@ -130,14 +126,8 @@ func (t *DisplayText) IncIndex(inc int) {
 	}
 }
 
-// IsLastElement checks if the index is at the last element of a collection.
 func (t *DisplayText) IsLastWord() bool {
 	return t.Index >= len(t.Words)
-}
-
-// IsFirstOrLastWord returns true if Index it at the first or last position
-func (t *DisplayText) IsFirstOrLastWord() bool {
-	return len(t.Words) == 0 || t.Index == 0 || t.Index >= len(t.Words)-1
 }
 
 // Percentage returns the relative position of the index
