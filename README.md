@@ -32,10 +32,14 @@ Usage of ./GoSpeedRead:
         Center font size (0 = auto from height)
   -height int
         The height of the window (default 200)
-  -theme string
-        Theme: dark or light (default "dark")
   -width int
         The width of the window (default 800)
+```
+
+Theme follows your system preference (light/dark). On GNOME/GTK-based desktops, toggle with:
+```sh
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'   # dark
+gsettings set org.gnome.desktop.interface color-scheme 'default'       # light
 ```
 
 #### Keybindings

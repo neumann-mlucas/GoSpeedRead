@@ -52,10 +52,6 @@ func main() {
 	width := flag.Int("width", 800, "The width of the window")
 	height := flag.Int("height", 200, "The height of the window")
 	wpm := flag.Int("WPM", 300, "Word per minute")
-	themeName := flag.String("theme", "dark", "Theme: dark or light")
-	// ponytail: font size derived from --height default; fyne lacks a clean
-	// window-resize callback. Upgrade to a custom widget with Resize() override
-	// if runtime scaling matters.
 	fontSize := flag.Int("fontsize", 0, "Center font size (0 = auto from height)")
 	flag.Parse()
 
@@ -64,12 +60,6 @@ func main() {
 	}
 
 	myApp := app.New()
-	if *themeName == "light" {
-		myApp.Settings().SetTheme(theme.LightTheme())
-	} else {
-		myApp.Settings().SetTheme(theme.DarkTheme())
-	}
-
 	myWindow := myApp.NewWindow("SpeedRead")
 
 	sr := NewSpeedRead(*wpm, float32(*fontSize))
