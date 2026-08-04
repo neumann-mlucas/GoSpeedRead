@@ -29,9 +29,8 @@ var focalColor = color.NRGBA{R: 220, G: 60, B: 60, A: 255}
 type SpeedRead struct {
 	Window *fyne.Container
 
-	wpmLabel      *canvas.Text
-	positionLabel *canvas.Text
-	helpLabel     *canvas.Text
+	wpmLabel  *canvas.Text
+	helpLabel *canvas.Text
 
 	wordCurrentPrefix *canvas.Text
 	wordCurrentFocal  *canvas.Text
@@ -92,7 +91,6 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 		text:              displaytext.New(wpm),
 		progress:          binding.NewFloat(),
 		wpmLabel:          newLabel(fmt.Sprintf("  WPM:%4d  ", wpm), 0, fg),
-		positionLabel:     newLabel(" 0/0 ", 0, fg),
 		helpLabel:         newLabel(helpText, 0, fg),
 		wordCurrentPrefix: newLabel("", fontSize, fg),
 		wordCurrentFocal:  newLabel("", fontSize, focalColor),
@@ -103,7 +101,6 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 
 	boldMono := fyne.TextStyle{Bold: true, Monospace: true}
 	sr.wpmLabel.TextStyle = boldMono
-	sr.positionLabel.TextStyle = fyne.TextStyle{Monospace: true}
 	sr.helpLabel.TextStyle = fyne.TextStyle{Italic: true, Monospace: true}
 	sr.helpLabel.Hide()
 	sr.wordCurrentPrefix.TextStyle = boldMono
@@ -120,7 +117,7 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 
 	top := uielements.BuildTopBar(wpm, sr.wpmLabel, sr.incWPM, sr.decWPM, sr.restart)
 	center := uielements.BuildCenterBox(sr.wordPrevious, centerGroup, sr.wordNext)
-	bottom, playBtn := uielements.BuildBottomBar(sr.progress, sr.positionLabel, sr.togglePlay, sr.stepForward, sr.stepBack)
+	bottom, playBtn := uielements.BuildBottomBar(sr.progress, sr.togglePlay, sr.stepForward, sr.stepBack)
 	sr.playButton = playBtn
 
 	sr.Window = container.NewBorder(top, container.NewVBox(bottom, sr.helpLabel), nil, nil, center)
@@ -250,9 +247,6 @@ func (sr *SpeedRead) render(state displaytext.DisplayState, wpm int) {
 
 	sr.wpmLabel.Text = fmt.Sprintf("  WPM:%4d  ", wpm)
 	sr.wpmLabel.Refresh()
-
-	sr.positionLabel.Text = fmt.Sprintf(" %d/%d ", state.Index+1, state.Total)
-	sr.positionLabel.Refresh()
 
 	sr.progress.Set(state.Prct)
 }

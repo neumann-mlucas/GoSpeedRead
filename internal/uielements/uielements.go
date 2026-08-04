@@ -51,17 +51,16 @@ func BuildTopBar(initialWPM int, wpm *canvas.Text, incWPM, decWPM, restart func(
 
 // BuildBottomBar creates the bottom display and returns the container + play button
 // so caller can toggle the play/pause icon.
-func BuildBottomBar(progress binding.Float, position *canvas.Text, play, forward, back func()) (*fyne.Container, *widget.Button) {
+func BuildBottomBar(progress binding.Float, play, forward, back func()) (*fyne.Container, *widget.Button) {
 	playButton := widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), play)
 	forwardButton := widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), forward)
 	rewindButton := widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), back)
 
 	progress.Set(0)
-	progressBar := NewCustomProgressBar(progress, 8)
+	progressBar := NewCustomProgressBar(progress, 3)
 
-	progressRow := container.NewBorder(nil, nil, nil, position, progressBar)
 	buttons := container.NewGridWithColumns(3, rewindButton, playButton, forwardButton)
-	return container.NewVBox(progressRow, buttons), playButton
+	return container.NewVBox(progressBar, buttons), playButton
 }
 
 // BuildCenterBox builds the main display. `center` can be any CanvasObject
