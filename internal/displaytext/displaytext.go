@@ -3,9 +3,10 @@ package displaytext
 import (
 	"fmt"
 	"github.com/atotto/clipboard"
-	"internal/words"
+	"github.com/neumann-mlucas/GoSpeedRead/internal/words"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type DisplayText struct {
@@ -45,24 +46,56 @@ func (t *DisplayText) GetClipBoard() {
 	t.Words = words
 }
 
-// Step gets the next Word to be display and increments the index position
+// Step gets the current word and increments the index position.
 func (t *DisplayText) Step() DisplayState {
 	defer t.IncIndex(+1)
-	word := t.Words[t.Index]
+	return t.stateAt(t.Index)
+}
+
+// Peek returns the DisplayState for the current index without advancing.
+// Used to re-render after mutations while paused.
+func (t *DisplayText) Peek() DisplayState {
+	if len(t.Words) == 0 || t.Index >= len(t.Words) {
+		return DisplayState{Total: len(t.Words), Index: t.Index}
+	}
+	return t.stateAt(t.Index)
+}
+
+func (t *DisplayText) stateAt(idx int) DisplayState {
+	word := t.Words[idx]
 	text := word.String()
-	// ponytail: ORP index computed on rendered text incl. quote padding; may misalign
-	// focal letter on quoted words. Compute against Word.Text raw core if it matters.
 	return DisplayState{
 		Text:  text,
-		Focal: ORPIndex(len([]rune(text))),
+		Focal: focalOnText(text),
 		Time:  t.DisplayTime(word),
 		Prct:  t.Percentage(),
 		Next:  t.GetNextWords(5),
 		Prev:  t.GetPreviousWords(5),
-		Index: t.Index,
+		Index: idx,
 		Total: len(t.Words),
 	}
 }
+
+// focalOnText returns the ORP focal rune index of a rendered word, skipping
+// leading/trailing non-alphanumeric runes (quote padding, punctuation).
+func focalOnText(text string) int {
+	runes := []rune(text)
+	start := 0
+	for start < len(runes) && !isCore(runes[start]) {
+		start++
+	}
+	end := len(runes)
+	for end > start && !isCore(runes[end-1]) {
+		end--
+	}
+	core := end - start
+	if core <= 0 {
+		return 0
+	}
+	return start + ORPIndex(core)
+}
+
+func isCore(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
 
 // ORPIndex returns the Optimal Recognition Point rune index for a word of length n.
 // Standard Spritz-style table: focus letter shifts right as words grow.

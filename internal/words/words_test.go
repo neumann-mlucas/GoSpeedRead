@@ -109,3 +109,20 @@ func TestProcessString(t *testing.T) {
 		}
 	}
 }
+
+func TestParseWords_ParagraphPause(t *testing.T) {
+	got := ParseWords("foo bar\n\nbaz qux")
+	if len(got) != 4 {
+		t.Fatalf("expected 4 words, got %d", len(got))
+	}
+	if got[1].Weight-CalcWeight("bar") != ParagraphWeight {
+		t.Errorf("last word of paragraph 1 missing ParagraphWeight bonus (got %d, base %d)",
+			got[1].Weight, CalcWeight("bar"))
+	}
+	if got[3].Weight != CalcWeight("qux") {
+		t.Errorf("last word overall should not get ParagraphWeight (got %d)", got[3].Weight)
+	}
+	if got[0].Weight != CalcWeight("foo") {
+		t.Errorf("mid-paragraph word should have plain weight (got %d)", got[0].Weight)
+	}
+}

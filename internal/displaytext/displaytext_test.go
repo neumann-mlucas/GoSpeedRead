@@ -1,7 +1,7 @@
 package displaytext
 
 import (
-	"internal/words"
+	"github.com/neumann-mlucas/GoSpeedRead/internal/words"
 	"testing"
 )
 
@@ -10,6 +10,36 @@ func setupDisplayText(wordStr string) *DisplayText {
 	dt := New(300)
 	dt.Words = words.ParseWords(wordStr)
 	return dt
+}
+
+func TestORPIndex(t *testing.T) {
+	cases := []struct{ n, want int }{
+		{0, 0}, {1, 0}, {2, 1}, {5, 1}, {6, 2}, {9, 2}, {10, 3}, {13, 3}, {14, 4}, {30, 4},
+	}
+	for _, c := range cases {
+		if got := ORPIndex(c.n); got != c.want {
+			t.Errorf("ORPIndex(%d) = %d, want %d", c.n, got, c.want)
+		}
+	}
+}
+
+func TestFocalOnText(t *testing.T) {
+	cases := []struct {
+		in   string
+		want int
+	}{
+		{"hello", 1},         // 5 letters → ORP=1 → 'e'
+		{" “ hello ” ", 4},   // strip 3 leading non-core, ORP=1 in 5-letter core, 3+1=4
+		{"a", 0},             // 1 letter → ORP=0
+		{"", 0},              // empty
+		{"foo.", 1},          // 3 letters → ORP=1
+		{"hello,", 1},        // core = "hello", ORP=1
+	}
+	for _, c := range cases {
+		if got := focalOnText(c.in); got != c.want {
+			t.Errorf("focalOnText(%q) = %d, want %d", c.in, got, c.want)
+		}
+	}
 }
 
 func TestNew(t *testing.T) {

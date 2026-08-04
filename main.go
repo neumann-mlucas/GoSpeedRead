@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"internal/displaytext"
-	"internal/uielements"
+	"github.com/neumann-mlucas/GoSpeedRead/internal/displaytext"
+	"github.com/neumann-mlucas/GoSpeedRead/internal/uielements"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -44,6 +44,7 @@ type SpeedRead struct {
 	progress binding.Float
 
 	mu      sync.Mutex
+	cond    *sync.Cond
 	playing bool
 }
 
@@ -98,6 +99,7 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 		wordNext:          newLabel("", previewSize, fg),
 		wordPrevious:      newLabel("", previewSize, fg),
 	}
+	sr.cond = sync.NewCond(&sr.mu)
 
 	boldMono := fyne.TextStyle{Bold: true, Monospace: true}
 	sr.wpmLabel.TextStyle = boldMono
@@ -185,6 +187,7 @@ func (sr *SpeedRead) togglePlay() {
 	}
 	sr.playing = !sr.playing
 	playing := sr.playing
+	sr.cond.Signal()
 	sr.mu.Unlock()
 
 	if playing {
@@ -198,9 +201,12 @@ func (sr *SpeedRead) togglePlay() {
 
 func (sr *SpeedRead) reloadClipboard() {
 	sr.mu.Lock()
-	defer sr.mu.Unlock()
 	sr.text.GetClipBoard()
 	sr.text.Index = 0
+	state, wpm := sr.text.Peek(), sr.text.WPM
+	sr.cond.Signal()
+	sr.mu.Unlock()
+	sr.render(state, wpm)
 }
 
 func (sr *SpeedRead) toggleHelp() {
@@ -211,21 +217,28 @@ func (sr *SpeedRead) toggleHelp() {
 	}
 }
 
-func (sr *SpeedRead) restart()     { sr.mu.Lock(); sr.text.Index = 0; sr.mu.Unlock() }
-func (sr *SpeedRead) stepForward() { sr.mu.Lock(); sr.text.IncIndex(+5); sr.mu.Unlock() }
-func (sr *SpeedRead) stepBack()    { sr.mu.Lock(); sr.text.IncIndex(-5); sr.mu.Unlock() }
-func (sr *SpeedRead) incWPM()      { sr.mu.Lock(); sr.text.WPM += 10; sr.mu.Unlock() }
-func (sr *SpeedRead) decWPM()      { sr.mu.Lock(); sr.text.WPM -= 10; sr.mu.Unlock() }
+// mutateAndRender runs fn under lock, then re-renders the peeked state.
+// Used by all control actions so paused UI stays in sync.
+func (sr *SpeedRead) mutateAndRender(fn func()) {
+	sr.mu.Lock()
+	fn()
+	state, wpm := sr.text.Peek(), sr.text.WPM
+	sr.mu.Unlock()
+	sr.render(state, wpm)
+}
 
-// Run drives the RSVP loop. Sleeps when paused or at end.
+func (sr *SpeedRead) restart()     { sr.mutateAndRender(func() { sr.text.Index = 0 }) }
+func (sr *SpeedRead) stepForward() { sr.mutateAndRender(func() { sr.text.IncIndex(+5) }) }
+func (sr *SpeedRead) stepBack()    { sr.mutateAndRender(func() { sr.text.IncIndex(-5) }) }
+func (sr *SpeedRead) incWPM()      { sr.mutateAndRender(func() { sr.text.WPM += 10 }) }
+func (sr *SpeedRead) decWPM()      { sr.mutateAndRender(func() { sr.text.WPM -= 10 }) }
+
+// Run drives the RSVP loop. Waits on cond when paused or at end.
 func (sr *SpeedRead) Run() {
 	for {
 		sr.mu.Lock()
-		if !sr.playing || sr.text.IsLastWord() {
-			sr.mu.Unlock()
-			// ponytail: 50ms idle poll; upgrade to sync.Cond if first-frame latency after play matters
-			time.Sleep(50 * time.Millisecond)
-			continue
+		for !sr.playing || sr.text.IsLastWord() {
+			sr.cond.Wait()
 		}
 		state := sr.text.Step()
 		wpm := sr.text.WPM
@@ -237,18 +250,19 @@ func (sr *SpeedRead) Run() {
 }
 
 func (sr *SpeedRead) render(state displaytext.DisplayState, wpm int) {
-	sr.setCurrentWord(state.Text, state.Focal)
+	if state.Total > 0 {
+		sr.setCurrentWord(state.Text, state.Focal)
 
-	sr.wordNext.Text = headRunes(state.Next, previewLen)
-	sr.wordNext.Refresh()
+		sr.wordNext.Text = headRunes(state.Next, previewLen)
+		sr.wordNext.Refresh()
 
-	sr.wordPrevious.Text = tailRunes(state.Prev, previewLen)
-	sr.wordPrevious.Refresh()
+		sr.wordPrevious.Text = tailRunes(state.Prev, previewLen)
+		sr.wordPrevious.Refresh()
 
+		sr.progress.Set(state.Prct)
+	}
 	sr.wpmLabel.Text = fmt.Sprintf("  WPM:%4d  ", wpm)
 	sr.wpmLabel.Refresh()
-
-	sr.progress.Set(state.Prct)
 }
 
 // headRunes returns first n runes of s (UTF-8 safe).
