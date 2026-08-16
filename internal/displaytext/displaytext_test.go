@@ -36,8 +36,8 @@ func TestFocalOnText(t *testing.T) {
 		{"hello,", 1},        // core = "hello", ORP=1
 	}
 	for _, c := range cases {
-		if got := focalOnText(c.in); got != c.want {
-			t.Errorf("focalOnText(%q) = %d, want %d", c.in, got, c.want)
+		if got := FocalOnText(c.in); got != c.want {
+			t.Errorf("FocalOnText(%q) = %d, want %d", c.in, got, c.want)
 		}
 	}
 }

@@ -66,7 +66,7 @@ func (t *DisplayText) stateAt(idx int) DisplayState {
 	text := word.String()
 	return DisplayState{
 		Text:  text,
-		Focal: focalOnText(text),
+		Focal: FocalOnText(text),
 		Time:  t.DisplayTime(word),
 		Prct:  t.Percentage(),
 		Next:  t.GetNextWords(5),
@@ -76,9 +76,9 @@ func (t *DisplayText) stateAt(idx int) DisplayState {
 	}
 }
 
-// focalOnText returns the ORP focal rune index of a rendered word, skipping
+// FocalOnText returns the ORP focal rune index of a rendered word, skipping
 // leading/trailing non-alphanumeric runes (quote padding, punctuation).
-func focalOnText(text string) int {
+func FocalOnText(text string) int {
 	runes := []rune(text)
 	start := 0
 	for start < len(runes) && !isCore(runes[start]) {
@@ -132,6 +132,9 @@ func (t *DisplayText) IsLastWord() bool {
 
 // Percentage returns the relative position of the index
 func (t *DisplayText) Percentage() float64 {
+	if len(t.Words) == 0 {
+		return 0
+	}
 	return float64(t.Index) / float64(len(t.Words))
 }
 

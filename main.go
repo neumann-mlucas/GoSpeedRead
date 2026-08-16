@@ -56,7 +56,9 @@ func main() {
 	flag.Parse()
 
 	if *fontSize == 0 {
-		*fontSize = int(float32(*height) * 0.16)
+		byH := float32(*height) * 0.16
+		byW := float32(*width) * 0.08
+		*fontSize = int(min(byH, byW))
 	}
 
 	myApp := app.New()
@@ -95,7 +97,8 @@ func NewSpeedRead(wpm int, fontSize float32) *SpeedRead {
 	sr.cond = sync.NewCond(&sr.mu)
 	sr.helpLabel.Hide()
 
-	sr.setCurrentWord(" READY ", -1)
+	const ready = " READY "
+	sr.setCurrentWord(ready, displaytext.FocalOnText(ready))
 
 	centerGroup := container.New(orpLayout{},
 		sr.wordCurrentPrefix, sr.wordCurrentFocal, sr.wordCurrentSuffix,
